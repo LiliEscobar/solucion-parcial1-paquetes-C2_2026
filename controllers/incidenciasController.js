@@ -21,7 +21,12 @@ function registrarIncidencia(req, res) {
   });
 }
 
+function listarIncidencias(req, res) {
+  return res.json(incidencias);
+}
+
 module.exports = {
   incidencias,
+  listarIncidencias,
   registrarIncidencia
 };
