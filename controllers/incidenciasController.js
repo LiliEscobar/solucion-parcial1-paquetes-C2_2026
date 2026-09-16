@@ -1,10 +1,13 @@
 const { validarIncidencia } = require('../utils/helpers');
 
+// Arreglo temporal donde se guardan las incidencias registradas.
 const incidencias = [];
 
+// Controlador para registrar una incidencia nueva.
 function registrarIncidencia(req, res) {
   const error = validarIncidencia(req.body);
 
+  // Si la validacion falla, se responde con error y no se guarda nada.
   if (error) {
     return res.status(400).json({ mensaje: error });
   }
@@ -22,10 +25,12 @@ function registrarIncidencia(req, res) {
   });
 }
 
+// Controlador para devolver todas las incidencias guardadas.
 function listarIncidencias(req, res) {
   return res.json(incidencias);
 }
 
+// Exportamos las funciones para poder usarlas desde las rutas.
 module.exports = {
   incidencias,
   listarIncidencias,
@@ -34,10 +39,12 @@ module.exports = {
   obtenerClasificacion
 };
 
+// Controlador para contar las incidencias segun su estado.
 function obtenerEstadisticas(req, res) {
   const estadisticas = incidencias.reduce((resultado, incidencia) => {
     resultado.totalIncidencias += 1;
 
+    // Relacionamos el estado de la incidencia con el contador que se debe aumentar.
     const estadisticaPorEstado = {
       Pendiente: 'pendientes',
       'En Proceso': 'enProceso',
@@ -63,6 +70,7 @@ function obtenerEstadisticas(req, res) {
   return res.json(estadisticas);
 }
 
+// Controlador para clasificar la incidencia segun su prioridad.
 function obtenerClasificacion(req, res) {
   const { id } = req.params;
   const incidencia = incidencias.find(i => i.id === Number(id));
@@ -72,6 +80,7 @@ function obtenerClasificacion(req, res) {
   const {prioridad} = incidencia;
 
   let clasificacion;
+  // Segun la prioridad, se asigna una clasificacion mas entendible.
   switch (prioridad) {
     case 'Alta':
       clasificacion = 'Crítica';
