@@ -1,0 +1,15 @@
+{
+  "name": "solucion-parcial1-paquetes-c2-2026",
+  "version": "1.0.0",
+  "description": "Solucion para la empresa TechSupport S.A.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "Lilian Sofia Escobar Salazar",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
