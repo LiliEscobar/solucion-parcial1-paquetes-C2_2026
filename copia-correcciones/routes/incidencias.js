@@ -11,6 +11,8 @@ const {
 
 const router = express.Router();
 
+// Comentario: primero se registran rutas concretas como /estadisticas y luego las rutas con parámetro.
+// Esto evita que /:id capture antes a /:id/clasificacion.
 router.get('/', listarIncidencias);
 router.post('/', registrarIncidencia);
 router.get('/estadisticas', obtenerEstadisticas);
