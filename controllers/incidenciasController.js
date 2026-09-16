@@ -13,7 +13,8 @@ function registrarIncidencia(req, res) {
     empleado: req.body.empleado.trim(),
     area: req.body.area.trim(),
     descripcion: req.body.descripcion.trim(),
-    prioridad: req.body.prioridad
+    prioridad: req.body.prioridad,
+    estado: 'Pendiente'
   });
 
   return res.status(201).json({
@@ -30,3 +31,34 @@ module.exports = {
   listarIncidencias,
   registrarIncidencia
 };
+
+function obtenerEstadisticas(req, res) {
+  const estadisticas = incidencias.reduce((resultado, incidencia) => {
+    resultado.totalIncidencias += 1;
+
+    const estadisticaPorEstado = {
+      Pendiente: 'pendientes',
+      'En Proceso': 'enProceso',
+      Resuelta: 'resueltas',
+      Cancelada: 'canceladas'
+    };
+
+    const clave = estadisticaPorEstado[incidencia.estado];
+    if (clave) {
+      resultado[clave] += 1;
+    }
+
+    return resultado;
+  }
+    , {
+      totalIncidencias: 0,
+      pendientes: 0,
+      enProceso: 0,
+      resueltas: 0,
+      canceladas: 0
+    });
+
+  return res.json(estadisticas);
+}
+
+module.exports.obtenerEstadisticas = obtenerEstadisticas;
