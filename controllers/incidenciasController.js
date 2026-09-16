@@ -29,7 +29,9 @@ function listarIncidencias(req, res) {
 module.exports = {
   incidencias,
   listarIncidencias,
-  registrarIncidencia
+  registrarIncidencia,
+  obtenerEstadisticas,
+  obtenerClasificacion
 };
 
 function obtenerEstadisticas(req, res) {
@@ -61,4 +63,27 @@ function obtenerEstadisticas(req, res) {
   return res.json(estadisticas);
 }
 
-module.exports.obtenerEstadisticas = obtenerEstadisticas;
+function obtenerClasificacion(req, res) {
+  const { id } = req.params;
+  const incidencia = incidencias.find(i => i.id === Number(id));
+  if (!incidencia) {
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
+  }
+  const {prioridad} = incidencia;
+
+  let clasificacion;
+  switch (prioridad) {
+    case 'Alta':
+      clasificacion = 'Crítica';
+      break;  
+    case 'Media':
+      clasificacion = 'Importante';
+      break;
+    case 'Baja':
+      clasificacion = 'Normal';
+      break;  
+    default:
+      clasificacion = 'Desconocida';
+  }
+  return res.json({ clasificacion });
+}
