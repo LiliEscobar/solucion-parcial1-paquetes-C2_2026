@@ -13,7 +13,8 @@ function registrarIncidencia(req, res) {
     empleado: req.body.empleado.trim(),
     area: req.body.area.trim(),
     descripcion: req.body.descripcion.trim(),
-    prioridad: req.body.prioridad
+    prioridad: req.body.prioridad,
+    estado: 'Pendiente'
   });
 
   return res.status(201).json({
@@ -28,5 +29,61 @@ function listarIncidencias(req, res) {
 module.exports = {
   incidencias,
   listarIncidencias,
-  registrarIncidencia
+  registrarIncidencia,
+  obtenerEstadisticas,
+  obtenerClasificacion
 };
+
+function obtenerEstadisticas(req, res) {
+  const estadisticas = incidencias.reduce((resultado, incidencia) => {
+    resultado.totalIncidencias += 1;
+
+    const estadisticaPorEstado = {
+      Pendiente: 'pendientes',
+      'En Proceso': 'enProceso',
+      Resuelta: 'resueltas',
+      Cancelada: 'canceladas'
+    };
+
+    const clave = estadisticaPorEstado[incidencia.estado];
+    if (clave) {
+      resultado[clave] += 1;
+    }
+
+    return resultado;
+  }
+    , {
+      totalIncidencias: 0,
+      pendientes: 0,
+      enProceso: 0,
+      resueltas: 0,
+      canceladas: 0
+    });
+
+  return res.json(estadisticas);
+}
+
+function obtenerClasificacion(req, res) {
+  const { id } = req.params;
+  const incidencia = incidencias.find(i => i.id === Number(id));
+  if (!incidencia) {
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
+  }
+  const {prioridad} = incidencia;
+
+  let clasificacion;
+  switch (prioridad) {
+    case 'Alta':
+      clasificacion = 'Crítica';
+      break;  
+    case 'Media':
+      clasificacion = 'Importante';
+      break;
+    case 'Baja':
+      clasificacion = 'Normal';
+      break;  
+    default:
+      clasificacion = 'Desconocida';
+  }
+  return res.json({ clasificacion });
+}
