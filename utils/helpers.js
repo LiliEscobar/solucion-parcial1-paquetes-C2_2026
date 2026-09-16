@@ -4,20 +4,21 @@ function estaVacio(valor) {
 }
 
 function validarIncidencia(datos) {
-  // Comentario: si el cuerpo llega vacío o nulo, no se puede destructurar y la petición debe rechazarse.
   if (!datos || typeof datos !== 'object') {
     return 'Todos los campos son obligatorios';
   }
 
   const { empleado, area, descripcion, prioridad } = datos;
-  const prioridadesPermitidas = ['Alta', 'Media', 'Baja'];
+  const prioridadesPermitidas = ['alta', 'media', 'baja'];
 
-  if (estaVacio(empleado) || estaVacio(area) || estaVacio(descripcion) || estaVacio(prioridad)) {
+  if (
+    estaVacio(empleado) ||
+    estaVacio(area) ||
+    estaVacio(descripcion) ||
+    estaVacio(prioridad)
+  ) {
     return 'Todos los campos son obligatorios';
-  }
-
-  // Comentario: se normaliza la prioridad con trim() para aceptar valores con espacios y validar correctamente.
-  if (!prioridadesPermitidas.includes(prioridad.trim())) {
+  } else if (!prioridadesPermitidas.includes(prioridad.trim().toLowerCase())) {
     return 'La prioridad debe ser Alta, Media o Baja';
   }
 
