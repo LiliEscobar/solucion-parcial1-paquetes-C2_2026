@@ -1,60 +1,68 @@
 const { validarIncidencia } = require('../utils/helpers');
 
+// Arreglo en memoria para almacenar las incidencias
 const incidencias = [];
 
-// Comentario: cada incidencia necesita un identificador único para poder buscarla, actualizarla o eliminarla más tarde.
+// Función auxiliar para generar un ID incremental
 function generarId() {
   if (incidencias.length === 0) {
     return 1;
   }
-
   return Math.max(...incidencias.map((incidencia) => incidencia.id)) + 1;
 }
 
+//Registrar Incidencia (POST /incidencias)
 function registrarIncidencia(req, res) {
-  // Comentario: validamos todo antes de guardar para evitar registros incompletos o inválidos.
   const error = validarIncidencia(req.body);
-
   if (error) {
     return res.status(400).json({ mensaje: error });
   }
+
+  // Normalizar la prioridad con la primera letra en mayúscula (ej: "alta" -> "Alta")
+  const prioridadFormateada = 
+    req.body.prioridad.trim().charAt(0).toUpperCase() + 
+    req.body.prioridad.trim().slice(1).toLowerCase();
 
   const nuevaIncidencia = {
     id: generarId(),
     empleado: req.body.empleado.trim(),
     area: req.body.area.trim(),
     descripcion: req.body.descripcion.trim(),
-    prioridad: req.body.prioridad.trim(),
+    prioridad: prioridadFormateada,
     estado: 'Pendiente'
   };
 
+  // Uso obligatorio de push()
   incidencias.push(nuevaIncidencia);
 
+  // Respuesta exacta según el PDF
   return res.status(201).json({
-    mensaje: 'Incidencia registrada correctamente',
-    incidencia: nuevaIncidencia
+    mensaje: 'Incidencia registrada correctamente'
   });
 }
 
+// 3. Listar Incidencias (GET /incidencias)
 function listarIncidencias(req, res) {
-  // Comentario: devolvemos el estado actual del array compartido para mantener los datos sincronizados.
   return res.status(200).json(incidencias);
 }
 
+// 4. Buscar Incidencia por ID (GET /incidencias/:id)
 function obtenerIncidenciaPorId(req, res) {
-  // Comentario: la búsqueda por ID es necesaria para consultar un registro específico y evitar devolver todo el arreglo.
   const id = Number(req.params.id);
+  
+  // Uso obligatorio de find()
   const incidencia = incidencias.find((item) => item.id === id);
 
   if (!incidencia) {
-    return res.status(404).json({ mensaje: `No se encontró una incidencia con el ID ${id}` });
+    // Mensaje de error exacto según el PDF
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
   return res.status(200).json(incidencia);
 }
 
+// 5. Cambiar Estado de Incidencia (PUT /incidencias/:id/estado)
 function actualizarEstadoIncidencia(req, res) {
-  // Comentario: se valida el estado antes de modificar el registro para evitar inconsistencias en el flujo de trabajo.
   const id = Number(req.params.id);
   const { estado } = req.body;
 
@@ -63,37 +71,42 @@ function actualizarEstadoIncidencia(req, res) {
   }
 
   const incidencia = incidencias.find((item) => item.id === id);
-
   if (!incidencia) {
-    return res.status(404).json({ mensaje: `No se encontró una incidencia con el ID ${id}` });
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
-  const estadosPermitidos = ['Pendiente', 'En Proceso', 'Resuelta', 'Cancelada'];
   const estadoNormalizado = estado.trim();
 
-  if (!estadosPermitidos.includes(estadoNormalizado)) {
-    return res.status(400).json({
-      mensaje: `Estado "${estadoNormalizado}" no válido. Use: Pendiente, En Proceso, Resuelta o Cancelada`
-    });
+  // Requisito OBLIGATORIO del PDF: Uso de SWITCH para validar estados
+  switch (estadoNormalizado) {
+    case 'Pendiente':
+    case 'En Proceso':
+    case 'Resuelta':
+    case 'Cancelada':
+      incidencia.estado = estadoNormalizado;
+      return res.status(200).json({
+        mensaje: 'Estado actualizado correctamente',
+        incidencia
+      });
+    default:
+      return res.status(400).json({
+        mensaje: `Estado "${estadoNormalizado}" no válido. Use: Pendiente, En Proceso, Resuelta o Cancelada`
+      });
   }
-
-  incidencia.estado = estadoNormalizado;
-
-  return res.status(200).json({
-    mensaje: 'Estado actualizado correctamente',
-    incidencia
-  });
 }
 
+// 6. Eliminar Incidencia (DELETE /incidencias/:id)
 function eliminarIncidencia(req, res) {
-  // Comentario: usar findIndex + splice mantiene la integridad del array y permite borrar un elemento preciso por ID.
   const id = Number(req.params.id);
+
+  // Requisito OBLIGATORIO del PDF: Uso de findIndex()
   const indice = incidencias.findIndex((item) => item.id === id);
 
   if (indice === -1) {
-    return res.status(404).json({ mensaje: `No se encontró una incidencia con el ID ${id}` });
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
+  // Requisito OBLIGATORIO del PDF: Uso de splice()
   const [incidenciaEliminada] = incidencias.splice(indice, 1);
 
   return res.status(200).json({
@@ -102,37 +115,42 @@ function eliminarIncidencia(req, res) {
   });
 }
 
+// Endpoint de Estadísticas (GET /incidencias/estadisticas)
 function obtenerEstadisticas(req, res) {
-  // Comentario: se reduce el array para contar incidencias por estado y total general.
-  const estadisticas = incidencias.reduce((resultado, incidencia) => {
-    resultado.totalIncidencias += 1;
+  const estadisticas = incidencias.reduce(
+    (resultado, incidencia) => {
+      resultado.totalIncidencias += 1;
 
-    const estadisticaPorEstado = {
-      Pendiente: 'pendientes',
-      'En Proceso': 'enProceso',
-      Resuelta: 'resueltas',
-      Cancelada: 'canceladas'
-    };
+      switch (incidencia.estado) {
+        case 'Pendiente':
+          resultado.pendientes += 1;
+          break;
+        case 'En Proceso':
+          resultado.enProceso += 1;
+          break;
+        case 'Resuelta':
+          resultado.resueltas += 1;
+          break;
+        case 'Cancelada':
+          resultado.canceladas += 1;
+          break;
+      }
 
-    const clave = estadisticaPorEstado[incidencia.estado];
-    if (clave) {
-      resultado[clave] += 1;
+      return resultado;
+    },
+    {
+      totalIncidencias: 0,
+      pendientes: 0,
+      enProceso: 0,
+      resueltas: 0,
+      canceladas: 0
     }
-
-    return resultado;
-  }, {
-    totalIncidencias: 0,
-    pendientes: 0,
-    enProceso: 0,
-    resueltas: 0,
-    canceladas: 0
-  });
+  );
 
   return res.status(200).json(estadisticas);
 }
 
 function obtenerClasificacion(req, res) {
-  // Comentario: la clasificación depende de la prioridad, por eso se usa un switch para traducir cada valor a un nivel claro.
   const id = Number(req.params.id);
   const incidencia = incidencias.find((item) => item.id === id);
 
@@ -140,12 +158,12 @@ function obtenerClasificacion(req, res) {
     return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
-  const { prioridad } = incidencia;
-  let clasificacion = 'Desconocida';
+  let clasificacion = 'Normal';
 
-  switch (prioridad) {
+  // Requisito OBLIGATORIO del PDF: Usar exclusivamente SWITCH
+  switch (incidencia.prioridad) {
     case 'Alta':
-      clasificacion = 'Crítica';
+      clasificacion = 'Critica';
       break;
     case 'Media':
       clasificacion = 'Importante';
@@ -154,10 +172,14 @@ function obtenerClasificacion(req, res) {
       clasificacion = 'Normal';
       break;
     default:
-      clasificacion = 'Desconocida';
+      clasificacion = 'Normal';
   }
 
-  return res.status(200).json({ clasificacion });
+  // Respuesta exacta según la tabla del PDF: {"id": 1, "clasificacion": "Critica"}
+  return res.status(200).json({
+    id: incidencia.id,
+    clasificacion
+  });
 }
 
 module.exports = {

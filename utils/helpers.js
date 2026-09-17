@@ -1,7 +1,8 @@
+
 function estaVacio(valor) {
-  // Comentario: evitamos cadenas vacías o con espacios en blanco para validar datos de entrada del usuario.
   return typeof valor !== 'string' || valor.trim() === '';
 }
+
 
 function validarIncidencia(datos) {
   if (!datos || typeof datos !== 'object') {
@@ -11,6 +12,7 @@ function validarIncidencia(datos) {
   const { empleado, area, descripcion, prioridad } = datos;
   const prioridadesPermitidas = ['alta', 'media', 'baja'];
 
+  // Validar que ningún campo esté vacío
   if (
     estaVacio(empleado) ||
     estaVacio(area) ||
@@ -18,7 +20,9 @@ function validarIncidencia(datos) {
     estaVacio(prioridad)
   ) {
     return 'Todos los campos son obligatorios';
-  } else if (!prioridadesPermitidas.includes(prioridad.trim().toLowerCase())) {
+  } 
+  // Validar que la prioridad sea Alta, Media o Baja (sin importar mayúsculas/minúsculas)
+  else if (!prioridadesPermitidas.includes(prioridad.trim().toLowerCase())) {
     return 'La prioridad debe ser Alta, Media o Baja';
   }
 

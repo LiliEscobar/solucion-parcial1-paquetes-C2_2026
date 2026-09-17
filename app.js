@@ -4,14 +4,15 @@ const incidenciasRouter = require('./routes/incidencias');
 const app = express();
 const PORT = process.env.PORT || 3124;
 
-// Comentario: express.json() permite leer el cuerpo JSON en req.body.
+// Middleware para procesar cuerpos en formato JSON (req.body)
 app.use(express.json());
 
-// Comentario: se monta el router para centralizar las rutas y evitar duplicar la lógica dentro de app.js.
+// Ruta base opcional
 app.get('/', (req, res) => {
   res.json({ mensaje: 'API de incidencias TechSupport S.A.' });
 });
 
+// Centralización de rutas bajo el prefijo /incidencias
 app.use('/incidencias', incidenciasRouter);
 
 app.listen(PORT, () => {
