@@ -1,6 +1,71 @@
 const { validarIncidencia } = require('../utils/helpers');
 
-const incidencias = [];
+const incidencias = [
+  {
+    id: 1,
+    empleado: 'Juan Perez',
+    area: 'Contabilidad',
+    descripcion: 'No puedo imprimir',
+    prioridad: 'Alta',
+    estado: 'Pendiente'
+  },
+  {
+    id: 2,
+    empleado: 'Maria Lopez',
+    area: 'Ventas',
+    descripcion: 'Correo no sincroniza',
+    prioridad: 'Media',
+    estado: 'En Proceso'
+  },
+  {
+    id: 3,
+    empleado: 'Carlos Ruiz',
+    area: 'Soporte',
+    descripcion: 'Pantalla parpadea',
+    prioridad: 'Baja',
+    estado: 'Resuelta'
+  },
+  {
+    id: 4,
+    empleado: 'Ana Torres',
+    area: 'Recursos Humanos',
+    descripcion: 'No accede al sistema de planillas',
+    prioridad: 'Alta',
+    estado: 'Pendiente'
+  },
+  {
+    id: 5,
+    empleado: 'Luis Mendoza',
+    area: 'Finanzas',
+    descripcion: 'Error al exportar reporte mensual',
+    prioridad: 'Media',
+    estado: 'Pendiente'
+  },
+  {
+    id: 6,
+    empleado: 'Sofia Ramirez',
+    area: 'Marketing',
+    descripcion: 'Falla la conexión a la VPN',
+    prioridad: 'Alta',
+    estado: 'En Proceso'
+  },
+  {
+    id: 7,
+    empleado: 'Pedro Castillo',
+    area: 'Operaciones',
+    descripcion: 'Impresora no responde',
+    prioridad: 'Baja',
+    estado: 'Cancelada'
+  },
+  {
+    id: 8,
+    empleado: 'Laura Gomez',
+    area: 'Atención al Cliente',
+    descripcion: 'Sistema de tickets caído',
+    prioridad: 'Alta',
+    estado: 'Resuelta'
+  }
+];
 
 function generarId() { // Se genera un ID incremental para cada incidencia porque el array no lo tenía y las rutas por ID lo requieren.
   if (incidencias.length === 0) {
