@@ -1,7 +1,73 @@
+// Importa la funcion que valida los datos antes de registrar una incidencia
 const { validarIncidencia } = require('../utils/helpers');
 
 // Arreglo en memoria para almacenar las incidencias
-const incidencias = [];
+const incidencias = [
+  {
+    id: 1,
+    empleado: 'Juan Perez',
+    area: 'Contabilidad',
+    descripcion: 'No puedo imprimir',
+    prioridad: 'Alta',
+    estado: 'Pendiente'
+  },
+  {
+    id: 2,
+    empleado: 'Maria Lopez',
+    area: 'Ventas',
+    descripcion: 'Correo no sincroniza',
+    prioridad: 'Media',
+    estado: 'En Proceso'
+  },
+  {
+    id: 3,
+    empleado: 'Carlos Ruiz',
+    area: 'Soporte',
+    descripcion: 'Pantalla parpadea',
+    prioridad: 'Baja',
+    estado: 'Resuelta'
+  },
+  {
+    id: 4,
+    empleado: 'Ana Torres',
+    area: 'Recursos Humanos',
+    descripcion: 'No accede al sistema de planillas',
+    prioridad: 'Alta',
+    estado: 'Pendiente'
+  },
+  {
+    id: 5,
+    empleado: 'Luis Mendoza',
+    area: 'Finanzas',
+    descripcion: 'Error al exportar reporte mensual',
+    prioridad: 'Media',
+    estado: 'Pendiente'
+  },
+  {
+    id: 6,
+    empleado: 'Sofia Ramirez',
+    area: 'Marketing',
+    descripcion: 'Falla la conexión a la VPN',
+    prioridad: 'Alta',
+    estado: 'En Proceso'
+  },
+  {
+    id: 7,
+    empleado: 'Pedro Castillo',
+    area: 'Operaciones',
+    descripcion: 'Impresora no responde',
+    prioridad: 'Baja',
+    estado: 'Cancelada'
+  },
+  {
+    id: 8,
+    empleado: 'Laura Gomez',
+    area: 'Atención al Cliente',
+    descripcion: 'Sistema de tickets caído',
+    prioridad: 'Alta',
+    estado: 'Resuelta'
+  }
+];
 
 // Función auxiliar para generar un ID incremental
 function generarId() {
@@ -11,18 +77,19 @@ function generarId() {
   return Math.max(...incidencias.map((incidencia) => incidencia.id)) + 1;
 }
 
-//Registrar Incidencia (POST /incidencias)
+// Registrar Incidencia (POST /incidencias)
 function registrarIncidencia(req, res) {
   const error = validarIncidencia(req.body);
   if (error) {
     return res.status(400).json({ mensaje: error });
   }
 
-  // Normalizar la prioridad con la primera letra en mayúscula 
+  // Normalizar la prioridad con la primera letra en mayuscula (ej: "alta" -> "Alta")
   const prioridadFormateada = 
     req.body.prioridad.trim().charAt(0).toUpperCase() + 
     req.body.prioridad.trim().slice(1).toLowerCase();
 
+  // Crea la nueva incidencia con estado inicial Pendiente
   const nuevaIncidencia = {
     id: generarId(),
     empleado: req.body.empleado.trim(),
@@ -32,9 +99,10 @@ function registrarIncidencia(req, res) {
     estado: 'Pendiente'
   };
 
-  // Uso obligatorio de push()
+  // Agregar la nueva incidencia al arreglo de incidencias
   incidencias.push(nuevaIncidencia);
 
+  // Responde con codigo 201 porque el registro fue creado
   return res.status(201).json({
     mensaje: 'Incidencia registrada correctamente'
   });
@@ -49,7 +117,7 @@ function listarIncidencias(req, res) {
 function obtenerIncidenciaPorId(req, res) {
   const id = Number(req.params.id);
   
-  // Uso obligatorio de find()
+  // Buscar la primera incidencia que coincida con el ID recibido
   const incidencia = incidencias.find((item) => item.id === id);
 
   if (!incidencia) {
@@ -75,7 +143,7 @@ function actualizarEstadoIncidencia(req, res) {
 
   const estadoNormalizado = estado.trim();
 
-  //Uso de SWITCH para validar estados
+  // Uso de SWITCH para validar estados
   switch (estadoNormalizado) {
     case 'Pendiente':
     case 'En Proceso':
@@ -97,14 +165,14 @@ function actualizarEstadoIncidencia(req, res) {
 function eliminarIncidencia(req, res) {
   const id = Number(req.params.id);
 
-  // Uso de findIndex()
+  // Obtener la posicion de la incidencia dentro del arreglo
   const indice = incidencias.findIndex((item) => item.id === id);
 
   if (indice === -1) {
     return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
-  //Uso de splice()
+  // Eliminar una sola incidencia usando la posicion encontrada
   const [incidenciaEliminada] = incidencias.splice(indice, 1);
 
   return res.status(200).json({
@@ -158,6 +226,7 @@ function obtenerClasificacion(req, res) {
 
   let clasificacion = 'Normal';
 
+  // Clasificar la incidencia por su prioridad
   switch (incidencia.prioridad) {
     case 'Alta':
       clasificacion = 'Critica';
