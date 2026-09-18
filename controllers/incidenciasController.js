@@ -18,7 +18,7 @@ function registrarIncidencia(req, res) {
     return res.status(400).json({ mensaje: error });
   }
 
-  // Normalizar la prioridad con la primera letra en mayúscula (ej: "alta" -> "Alta")
+  // Normalizar la prioridad con la primera letra en mayúscula 
   const prioridadFormateada = 
     req.body.prioridad.trim().charAt(0).toUpperCase() + 
     req.body.prioridad.trim().slice(1).toLowerCase();
@@ -35,7 +35,6 @@ function registrarIncidencia(req, res) {
   // Uso obligatorio de push()
   incidencias.push(nuevaIncidencia);
 
-  // Respuesta exacta según el PDF
   return res.status(201).json({
     mensaje: 'Incidencia registrada correctamente'
   });
@@ -54,7 +53,6 @@ function obtenerIncidenciaPorId(req, res) {
   const incidencia = incidencias.find((item) => item.id === id);
 
   if (!incidencia) {
-    // Mensaje de error exacto según el PDF
     return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
@@ -77,7 +75,7 @@ function actualizarEstadoIncidencia(req, res) {
 
   const estadoNormalizado = estado.trim();
 
-  // Requisito OBLIGATORIO del PDF: Uso de SWITCH para validar estados
+  //Uso de SWITCH para validar estados
   switch (estadoNormalizado) {
     case 'Pendiente':
     case 'En Proceso':
@@ -99,14 +97,14 @@ function actualizarEstadoIncidencia(req, res) {
 function eliminarIncidencia(req, res) {
   const id = Number(req.params.id);
 
-  // Requisito OBLIGATORIO del PDF: Uso de findIndex()
+  // Uso de findIndex()
   const indice = incidencias.findIndex((item) => item.id === id);
 
   if (indice === -1) {
     return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
-  // Requisito OBLIGATORIO del PDF: Uso de splice()
+  //Uso de splice()
   const [incidenciaEliminada] = incidencias.splice(indice, 1);
 
   return res.status(200).json({
@@ -160,7 +158,6 @@ function obtenerClasificacion(req, res) {
 
   let clasificacion = 'Normal';
 
-  // Requisito OBLIGATORIO del PDF: Usar exclusivamente SWITCH
   switch (incidencia.prioridad) {
     case 'Alta':
       clasificacion = 'Critica';
@@ -175,7 +172,6 @@ function obtenerClasificacion(req, res) {
       clasificacion = 'Normal';
   }
 
-  // Respuesta exacta según la tabla del PDF: {"id": 1, "clasificacion": "Critica"}
   return res.status(200).json({
     id: incidencia.id,
     clasificacion
