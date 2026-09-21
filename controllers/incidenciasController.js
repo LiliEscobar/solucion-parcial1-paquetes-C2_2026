@@ -1,5 +1,7 @@
+// Importa la funcion que valida los datos antes de registrar una incidencia
 const { validarIncidencia } = require('../utils/helpers');
 
+// Arreglo en memoria para almacenar las incidencias
 const incidencias = [
   {
     id: 1,
@@ -67,92 +69,110 @@ const incidencias = [
   }
 ];
 
-function generarId() { // Se genera un ID incremental para cada incidencia porque el array no lo tenía y las rutas por ID lo requieren.
+// Función auxiliar para generar un ID incremental
+function generarId() {
   if (incidencias.length === 0) {
     return 1;
   }
-
   return Math.max(...incidencias.map((incidencia) => incidencia.id)) + 1;
 }
 
+// Registrar Incidencia (POST /incidencias)
 function registrarIncidencia(req, res) {
-  const error = validarIncidencia(req.body); // Se valida el cuerpo para evitar guardar datos vacíos o inválidos.
-
+  const error = validarIncidencia(req.body);
   if (error) {
     return res.status(400).json({ mensaje: error });
   }
 
+  // Normalizar la prioridad con la primera letra en mayuscula (ej: "alta" -> "Alta")
+  const prioridadFormateada = 
+    req.body.prioridad.trim().charAt(0).toUpperCase() + 
+    req.body.prioridad.trim().slice(1).toLowerCase();
+
+  // Crea la nueva incidencia con estado inicial Pendiente
   const nuevaIncidencia = {
-    id: generarId(), // Se agrega el id para que luego se pueda buscar, actualizar y borrar una incidencia concreta.
+    id: generarId(),
     empleado: req.body.empleado.trim(),
     area: req.body.area.trim(),
     descripcion: req.body.descripcion.trim(),
-    prioridad: req.body.prioridad.trim(), // Se normaliza la prioridad para quitar espacios extras y mantener datos consistentes.
+    prioridad: prioridadFormateada,
     estado: 'Pendiente'
   };
 
+  // Agregar la nueva incidencia al arreglo de incidencias
   incidencias.push(nuevaIncidencia);
 
+  // Responde con codigo 201 porque el registro fue creado
   return res.status(201).json({
-    mensaje: 'Incidencia registrada correctamente',
-    incidencia: nuevaIncidencia
+    mensaje: 'Incidencia registrada correctamente'
   });
 }
 
+// 3. Listar Incidencias (GET /incidencias)
 function listarIncidencias(req, res) {
-  return res.status(200).json(incidencias); // Se devuelve el arreglo completo porque esa es la operación de listado.
+  return res.status(200).json(incidencias);
 }
 
+// 4. Buscar Incidencia por ID (GET /incidencias/:id)
 function obtenerIncidenciaPorId(req, res) {
-  const id = Number(req.params.id); // Se convierte a número porque Express entrega el parámetro como string.
-  const incidencia = incidencias.find((item) => item.id === id); // Se usa find para localizar la incidencia por su clave única.
+  const id = Number(req.params.id);
+  
+  // Buscar la primera incidencia que coincida con el ID recibido
+  const incidencia = incidencias.find((item) => item.id === id);
 
   if (!incidencia) {
-    return res.status(404).json({ mensaje: `No se encontró una incidencia con el ID ${id}` });
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
   return res.status(200).json(incidencia);
 }
 
+// 5. Cambiar Estado de Incidencia (PUT /incidencias/:id/estado)
 function actualizarEstadoIncidencia(req, res) {
   const id = Number(req.params.id);
   const { estado } = req.body;
 
-  if (!estado || typeof estado !== 'string' || estado.trim() === '') { // Se comprueba que venga un estado real y no un valor vacío.
+  if (!estado || typeof estado !== 'string' || estado.trim() === '') {
     return res.status(400).json({ mensaje: 'El campo "estado" es obligatorio' });
   }
 
   const incidencia = incidencias.find((item) => item.id === id);
-
   if (!incidencia) {
-    return res.status(404).json({ mensaje: `No se encontró una incidencia con el ID ${id}` });
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
-  const estadosPermitidos = ['Pendiente', 'En Proceso', 'Resuelta', 'Cancelada'];
   const estadoNormalizado = estado.trim();
 
-  if (!estadosPermitidos.includes(estadoNormalizado)) { // Se valida que el nuevo estado pertenezca al conjunto permitido del negocio.
-    return res.status(400).json({
-      mensaje: `Estado "${estadoNormalizado}" no válido. Use: Pendiente, En Proceso, Resuelta o Cancelada`
-    });
+  // Uso de SWITCH para validar estados
+  switch (estadoNormalizado) {
+    case 'Pendiente':
+    case 'En Proceso':
+    case 'Resuelta':
+    case 'Cancelada':
+      incidencia.estado = estadoNormalizado;
+      return res.status(200).json({
+        mensaje: 'Estado actualizado correctamente',
+        incidencia
+      });
+    default:
+      return res.status(400).json({
+        mensaje: `Estado "${estadoNormalizado}" no válido. Use: Pendiente, En Proceso, Resuelta o Cancelada`
+      });
   }
-
-  incidencia.estado = estadoNormalizado;
-
-  return res.status(200).json({
-    mensaje: 'Estado actualizado correctamente',
-    incidencia
-  });
 }
 
+// 6. Eliminar Incidencia (DELETE /incidencias/:id)
 function eliminarIncidencia(req, res) {
   const id = Number(req.params.id);
-  const indice = incidencias.findIndex((item) => item.id === id); // Se usa findIndex para ubicar la posición exacta y luego borrar con splice.
+
+  // Obtener la posicion de la incidencia dentro del arreglo
+  const indice = incidencias.findIndex((item) => item.id === id);
 
   if (indice === -1) {
-    return res.status(404).json({ mensaje: `No se encontró una incidencia con el ID ${id}` });
+    return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
+  // Eliminar una sola incidencia usando la posicion encontrada
   const [incidenciaEliminada] = incidencias.splice(indice, 1);
 
   return res.status(200).json({
@@ -161,48 +181,55 @@ function eliminarIncidencia(req, res) {
   });
 }
 
+// Endpoint de Estadísticas (GET /incidencias/estadisticas)
 function obtenerEstadisticas(req, res) {
-  const estadisticas = incidencias.reduce((resultado, incidencia) => { // Se reduce el array para contar la cantidad por estado y el total global.
-    resultado.totalIncidencias += 1;
+  const estadisticas = incidencias.reduce(
+    (resultado, incidencia) => {
+      resultado.totalIncidencias += 1;
 
-    const estadisticaPorEstado = {
-      Pendiente: 'pendientes',
-      'En Proceso': 'enProceso',
-      Resuelta: 'resueltas',
-      Cancelada: 'canceladas'
-    };
+      switch (incidencia.estado) {
+        case 'Pendiente':
+          resultado.pendientes += 1;
+          break;
+        case 'En Proceso':
+          resultado.enProceso += 1;
+          break;
+        case 'Resuelta':
+          resultado.resueltas += 1;
+          break;
+        case 'Cancelada':
+          resultado.canceladas += 1;
+          break;
+      }
 
-    const clave = estadisticaPorEstado[incidencia.estado];
-    if (clave) {
-      resultado[clave] += 1;
+      return resultado;
+    },
+    {
+      totalIncidencias: 0,
+      pendientes: 0,
+      enProceso: 0,
+      resueltas: 0,
+      canceladas: 0
     }
-
-    return resultado;
-  }, {
-    totalIncidencias: 0,
-    pendientes: 0,
-    enProceso: 0,
-    resueltas: 0,
-    canceladas: 0
-  });
+  );
 
   return res.status(200).json(estadisticas);
 }
 
 function obtenerClasificacion(req, res) {
   const id = Number(req.params.id);
-  const incidencia = incidencias.find((item) => item.id === id); // Se confirma que la incidencia existe antes de clasificarla.
+  const incidencia = incidencias.find((item) => item.id === id);
 
   if (!incidencia) {
     return res.status(404).json({ mensaje: 'Incidencia no encontrada' });
   }
 
-  const { prioridad } = incidencia;
-  let clasificacion = 'Desconocida';
+  let clasificacion = 'Normal';
 
-  switch (prioridad) { // Se traduce cada prioridad a una clasificación de negocio: crítica, importante o normal.
+  // Clasificar la incidencia por su prioridad
+  switch (incidencia.prioridad) {
     case 'Alta':
-      clasificacion = 'Crítica';
+      clasificacion = 'Critica';
       break;
     case 'Media':
       clasificacion = 'Importante';
@@ -211,10 +238,13 @@ function obtenerClasificacion(req, res) {
       clasificacion = 'Normal';
       break;
     default:
-      clasificacion = 'Desconocida';
+      clasificacion = 'Normal';
   }
 
-  return res.status(200).json({ clasificacion });
+  return res.status(200).json({
+    id: incidencia.id,
+    clasificacion
+  });
 }
 
 module.exports = {

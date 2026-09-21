@@ -1,21 +1,26 @@
+// routes/incidencias.js
 const express = require('express');
 const {
   listarIncidencias,
   registrarIncidencia,
+  obtenerIncidenciaPorId,
+  actualizarEstadoIncidencia,
+  eliminarIncidencia,
   obtenerEstadisticas,
   obtenerClasificacion
 } = require('../controllers/incidenciasController');
 
-// Router nos permite agrupar las rutas relacionadas con incidencias.
 const router = express.Router();
 
-// Rutas principales para listar y registrar incidencias.
+// 1. Rutas exactas/estáticas primero
 router.get('/', listarIncidencias);
 router.post('/', registrarIncidencia);
-
-// Rutas adicionales para consultar resumenes y clasificaciones.
 router.get('/estadisticas', obtenerEstadisticas);
-router.get("/incidencias/:id/clasificacion", obtenerClasificacion);
 
-// Exportamos el router para conectarlo con la aplicacion principal.
+// 2. Rutas con parámetros específicos o dinámicos después
+router.get('/:id/clasificacion', obtenerClasificacion);
+router.get('/:id', obtenerIncidenciaPorId);
+router.put('/:id/estado', actualizarEstadoIncidencia);
+router.delete('/:id', eliminarIncidencia);
+
 module.exports = router;

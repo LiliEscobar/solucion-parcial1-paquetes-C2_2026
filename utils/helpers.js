@@ -1,27 +1,34 @@
-// Funcion auxiliar para saber si un valor viene vacio o solo con espacios.
+
 function estaVacio(valor) {
   return typeof valor !== 'string' || valor.trim() === '';
 }
 
-// Valida que una incidencia tenga los datos necesarios antes de guardarla.
-function validarIncidencia(datos) {
-  const { empleado, area, descripcion, prioridad } = datos;
-  const prioridadesPermitidas = ['Alta', 'Media', 'Baja'];
 
-  // Todos los campos son obligatorios para registrar la incidencia.
-  if (estaVacio(empleado) || estaVacio(area) || estaVacio(descripcion) || estaVacio(prioridad)) {
+function validarIncidencia(datos) {
+  if (!datos || typeof datos !== 'object') {
     return 'Todos los campos son obligatorios';
   }
 
-  // La prioridad solo puede ser una de las opciones indicadas.
-  if (!prioridadesPermitidas.includes(prioridad)) {
+  const { empleado, area, descripcion, prioridad } = datos;
+  const prioridadesPermitidas = ['alta', 'media', 'baja'];
+
+  // Validar que ningún campo esté vacío
+  if (
+    estaVacio(empleado) ||
+    estaVacio(area) ||
+    estaVacio(descripcion) ||
+    estaVacio(prioridad)
+  ) {
+    return 'Todos los campos son obligatorios';
+  } 
+  // Validar que la prioridad sea Alta, Media o Baja (sin importar mayúsculas/minúsculas)
+  else if (!prioridadesPermitidas.includes(prioridad.trim().toLowerCase())) {
     return 'La prioridad debe ser Alta, Media o Baja';
   }
 
   return null;
 }
 
-// Exportamos los helpers para reutilizarlos en otros archivos.
 module.exports = {
   estaVacio,
   validarIncidencia
